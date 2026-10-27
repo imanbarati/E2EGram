@@ -1,0 +1,137 @@
+name: Build E2EGram APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout this repo (patches)
+        uses: actions/checkout@v4
+        with:
+          path: patches
+
+      - name: Checkout Mercurygram
+        uses: actions/checkout@v4
+        with:
+          repository: Mercurygram/Mercurygram
+          ref: Mercurygram
+          path: src
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Apply E2E-only patches
+        run: |
+          set -euo pipefail
+          BASE=src/TMessagesProj/src/main/java
+          cp patches/MgAccountConfig.java              "$BASE/it/belloworld/mercurygram/"
+          cp patches/MercurygramSettingsActivity.java  "$BASE/it/belloworld/mercurygram/ui/"
+          cp patches/DialogsActivity.java              "$BASE/org/telegram/ui/"
+          cp patches/MessagesController.java           "$BASE/org/telegram/messenger/"
+          cp patches/GroupCreateActivity.java          "$BASE/org/telegram/ui/"
+          cp patches/ChannelCreateActivity.java        "$BASE/org/telegram/ui/"
+          echo "Patches applied"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gperf meson nasm cmake ninja-build pkg-config \
+            autoconf automake libtool
+
+      - name: Parse NDK version
+        working-directory: src
+        run: |
+          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' TMessagesProj/build.gradle | grep -oE '[0-9.]+' | head -1)
+          echo "NDK_VERSION=$ndk" >> "$GITHUB_ENV"
+          echo "Using NDK $ndk"
+
+      - name: Setup Android SDK + NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and build-tools
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "ndk;${NDK_VERSION}" "build-tools;35.0.0" "platforms;android-35" || \
+          sdkmanager "ndk;${NDK_VERSION}" "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Create API_KEYS
+        env:
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_HASH: ${{ secrets.APP_HASH }}
+        working-directory: src
+        run: |
+          ID="${APP_ID:-1}"
+          HASH="${APP_HASH:-0123456789abcdef0123456789abcdef}"
+          printf 'APP_ID = %s\nAPP_HASH = %s\n' "$ID" "$HASH" > API_KEYS
+          echo "API_KEYS written (APP_ID=${ID})"
+
+      - name: Build arm64 debug APK
+        working-directory: src
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew assembleAfatFdArm64Debug \
+            --no-daemon \
+            --stacktrace \
+            -PMG_BUILD_TAG="e2e.$(date +%Y%m%d).${{ github.run_number }}" \
+            || ./gradlew assembleAfatDebug --no-daemon --stacktrace
+
+      - name: Find and rename APK
+        id: apk
+        working-directory: src
+        run: |
+          set -euo pipefail
+          APK=$(find . -name "*.apk" -path "*/outputs/apk/*" | head -1)
+          if [ -z "$APK" ]; then
+            echo "No APK found"
+            find . -name "*.apk" || true
+            exit 1
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          NAME="E2EGram-${{ github.run_number }}-arm64-debug.apk"
+          cp "$APK" "$GITHUB_WORKSPACE/out/$NAME"
+          echo "apk_path=out/$NAME" >> "$GITHUB_OUTPUT"
+          echo "Found: $APK -> $NAME"
+          ls -lh "$GITHUB_WORKSPACE/out/"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: E2EGram-APK
+          path: ${{ steps.apk.outputs.apk_path }}
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: E2EGram build ${{ github.run_number }}
+          draft: false
+          prerelease: true
+          files: ${{ steps.apk.outputs.apk_path }}
+          body: |
+            Automatic unreleased APK build of Mercurygram + E2E-only mode patches.
+            - Toggle: Settings → Mercurygram → **E2E only mode (experimental)**
+            - Debug arm64 build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

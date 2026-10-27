@@ -1,0 +1,16 @@
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
+@@ -160,6 +160,14 @@
+     public ChannelCreateActivity(Bundle args) {
+         super(args);
++        if (getUserConfig().mg.e2eOnly) {
++            AndroidUtilities.runOnUIThread(() -> {
++                if (getParentActivity() != null) {
++                    org.telegram.ui.Components.AlertsCreator.showSimpleAlert(this, "E2E only mode", "Creating channels is disabled while E2E only mode is enabled. Only secret chats are allowed.");
++                }
++                finishFragment();
++            });
++        }
+         currentStep = args.getInt("step", 0);
+         if (args.containsKey("forcePublic")) {
+             forcePublic = args.getBoolean("forcePublic", false);

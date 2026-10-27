@@ -1,0 +1,11 @@
+--- a/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/DialogsActivity.java
+@@ -13632,7 +13632,7 @@
+         Bundle args = new Bundle();
+         args.putBoolean("destroyAfterSelect", true);
+         // Mercurygram: start new conversations as secret chats when opted in (#42)
+-        if (getUserConfig().mg.preferSecretChats) {
++        if (getUserConfig().mg.preferSecretChats || getUserConfig().mg.e2eOnly) {
+             args.putBoolean("createSecretChat", true);
+         }
+         presentFragment(new ContactsActivity(args));

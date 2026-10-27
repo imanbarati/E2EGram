@@ -1,0 +1,41 @@
+--- a/TMessagesProj/src/main/java/it/belloworld/mercurygram/MgAccountConfig.java
++++ b/TMessagesProj/src/main/java/it/belloworld/mercurygram/MgAccountConfig.java
+@@ -32,6 +32,14 @@
+     public boolean disableInstantView = false;
+     public boolean disableLinkPreviews = false;
+     public boolean preferSecretChats = false;
++    /**
++     * Hard E2E-only mode. When true:
++     * - New 1:1 chats are forced to secret chats
++     * - Non-secret dialogs are hidden from the main list
++     * - Creating / joining groups and channels is blocked
++     * Stronger than preferSecretChats.
++     */
++    public boolean e2eOnly = false;
+     public boolean deleteForAllByDefault = false;
+     public boolean stripTrackingParams = false;
+     public boolean disableCloudDrafts = false;
+@@ -90,6 +98,7 @@
+         editor.putBoolean("disableInstantView", disableInstantView);
+         editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
+         editor.putBoolean("preferSecretChats", preferSecretChats);
++        editor.putBoolean("e2eOnly", e2eOnly);
+         editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
+         editor.putBoolean("stripTrackingParams", stripTrackingParams);
+         editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
+@@ -118,6 +127,7 @@
+         disableInstantView = preferences.getBoolean("disableInstantView", false);
+         disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
+         preferSecretChats = preferences.getBoolean("preferSecretChats", false);
++        e2eOnly = preferences.getBoolean("e2eOnly", false);
+         deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
+         stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
+         disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
+@@ -152,6 +162,7 @@
+         disableInstantView = false;
+         disableLinkPreviews = false;
+         preferSecretChats = false;
++        e2eOnly = false;
+         deleteForAllByDefault = false;
+         stripTrackingParams = false;
+         disableCloudDrafts = false;

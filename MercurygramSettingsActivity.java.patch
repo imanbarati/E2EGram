@@ -1,0 +1,42 @@
+--- a/TMessagesProj/src/main/java/it/belloworld/mercurygram/ui/MercurygramSettingsActivity.java
++++ b/TMessagesProj/src/main/java/it/belloworld/mercurygram/ui/MercurygramSettingsActivity.java
+@@ -51,6 +51,7 @@
+     private static final int ID_DISABLE_LIVE_PHOTOS = 12;
+     private static final int ID_DISABLE_LINK_PREVIEWS = 13;
+     private static final int ID_PREFER_SECRET_CHATS = 14;
++    private static final int ID_E2E_ONLY = 16;
+     private static final int ID_DISABLE_AUTO_UPDATE = 20;
+     private static final int ID_ACCEPT_PRERELEASES = 21;
+     private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
+@@ -224,6 +225,11 @@
+                 .setChecked(getUserConfig().mg.preferSecretChats));
+         items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramPreferSecretChatsAbout)));
+ 
++        items.add(UItem.asCheck(ID_E2E_ONLY,
++                        "E2E only mode (experimental)")
++                .setChecked(getUserConfig().mg.e2eOnly));
++        items.add(UItem.asShadow("When enabled, only secret (end-to-end encrypted) chats are shown and new 1:1 conversations are forced into secret chats. Groups, channels and ordinary cloud chats are hidden / blocked. Existing non-secret history stays on Telegram servers."));
++
+         items.add(UItem.asButton(ID_TRANSLATION,
+                 LocaleController.getString(R.string.MercurygramTranslationSettings),
+                 translationModeShortLabel()));
+@@ -419,6 +425,19 @@
+                 getUserConfig().saveConfig(false);
+                 refreshList();
+                 break;
++            case ID_E2E_ONLY:
++                boolean next = !getUserConfig().mg.e2eOnly;
++                if (next) {
++                    // Force preferSecretChats as well when turning the hard mode on
++                    getUserConfig().mg.preferSecretChats = true;
++                }
++                getUserConfig().mg.e2eOnly = next;
++                getUserConfig().saveConfig(false);
++                // Force a dialogs refresh so the list filters immediately
++                getMessagesController().sortDialogs(null);
++                getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.dialogsNeedReload);
++                refreshList();
++                break;
+             case ID_TRANSCRIPTION:
+                 presentFragment(new MercurygramTranscriptionSettingsActivity());
+                 break;

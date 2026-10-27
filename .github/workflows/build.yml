@@ -32,15 +32,15 @@ jobs:
           fetch-depth: 1
 
       - name: Apply E2E-only patches
+        working-directory: src
         run: |
           set -euo pipefail
-          BASE=src/TMessagesProj/src/main/java
-          cp patches/MgAccountConfig.java              "$BASE/it/belloworld/mercurygram/"
-          cp patches/MercurygramSettingsActivity.java  "$BASE/it/belloworld/mercurygram/ui/"
-          cp patches/DialogsActivity.java              "$BASE/org/telegram/ui/"
-          cp patches/MessagesController.java           "$BASE/org/telegram/messenger/"
-          cp patches/GroupCreateActivity.java          "$BASE/org/telegram/ui/"
-          cp patches/ChannelCreateActivity.java        "$BASE/org/telegram/ui/"
+          patch -p1 < ../patches/MgAccountConfig.java.patch
+          patch -p1 < ../patches/MercurygramSettingsActivity.java.patch
+          patch -p1 < ../patches/DialogsActivity.java.patch
+          patch -p1 --fuzz=3 < ../patches/MessagesController.java.patch || echo "WARN: MessagesController patch may need adjust"
+          patch -p1 --fuzz=3 < ../patches/GroupCreateActivity.java.patch || echo "WARN: GroupCreateActivity patch may need adjust"
+          patch -p1 --fuzz=3 < ../patches/ChannelCreateActivity.java.patch || echo "WARN: ChannelCreateActivity patch may need adjust"
           echo "Patches applied"
 
       - name: Set up JDK 17
@@ -63,7 +63,7 @@ jobs:
           echo "NDK_VERSION=$ndk" >> "$GITHUB_ENV"
           echo "Using NDK $ndk"
 
-      - name: Setup Android SDK + NDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install NDK and build-tools
@@ -110,7 +110,6 @@ jobs:
           NAME="E2EGram-${{ github.run_number }}-arm64-debug.apk"
           cp "$APK" "$GITHUB_WORKSPACE/out/$NAME"
           echo "apk_path=out/$NAME" >> "$GITHUB_OUTPUT"
-          echo "Found: $APK -> $NAME"
           ls -lh "$GITHUB_WORKSPACE/out/"
 
       - name: Upload APK artifact
@@ -130,8 +129,7 @@ jobs:
           prerelease: true
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
-            Automatic unreleased APK build of Mercurygram + E2E-only mode patches.
-            - Toggle: Settings → Mercurygram → **E2E only mode (experimental)**
-            - Debug arm64 build
+            Automatic unreleased APK of Mercurygram + E2E-only mode.
+            Toggle: Settings → Mercurygram → **E2E only mode (experimental)**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

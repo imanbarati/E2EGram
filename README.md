@@ -12,36 +12,20 @@ Adds a toggle under **Settings → Mercurygram → E2E only mode (experimental)*
 
 ## Automatic APK builds
 
-Every push to `main` (and manual run from the Actions tab) builds a **debug arm64 APK** and:
+Every push to `main` (and **Actions → Build E2EGram APK → Run workflow**) builds a **debug arm64 APK** and publishes it as a pre-release.
 
-1. Uploads it as a workflow artifact
-2. Publishes it as a pre-release under Releases
+### Secrets (recommended)
 
-### Required secrets (recommended)
+**Settings → Secrets and variables → Actions**:
 
-Go to **Settings → Secrets and variables → Actions** and add:
+| Secret | Description |
+|--------|-------------|
+| `APP_ID` | Telegram API ID from https://my.telegram.org |
+| `APP_HASH` | Telegram API hash |
 
-| Secret     | Description                                      |
-|------------|--------------------------------------------------|
-| `APP_ID`   | Your Telegram API ID (from https://my.telegram.org) |
-| `APP_HASH` | Your Telegram API hash                           |
+Without them the APK builds but cannot log in to Telegram.
 
-Without them the build still runs but uses placeholders — the app will not connect to Telegram until you set real values.
+## Repo contents
 
-## Files
-
-- `MgAccountConfig.java` – e2eOnly flag
-- `MercurygramSettingsActivity.java` – settings toggle
-- `DialogsActivity.java` – force secret chat on new chats
-- `MessagesController.java` – hide non-secret dialogs
-- `GroupCreateActivity.java` / `ChannelCreateActivity.java` – block group/channel creation
-- `.github/workflows/build.yml` – auto-build workflow
-
-## Manual local build
-
-```bash
-git clone --depth 1 -b Mercurygram https://github.com/Mercurygram/Mercurygram.git
-cd Mercurygram
-# copy the 6 .java files from this repo over the matching paths
-./gradlew assembleAfatFdArm64Debug
-```
+- `*.java.patch` — the E2E-only changes applied on top of Mercurygram
+- `.github/workflows/build.yml` — auto-build + release workflow

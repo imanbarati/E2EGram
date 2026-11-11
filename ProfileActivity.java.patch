@@ -1,0 +1,46 @@
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ProfileActivity.java
+@@ -7169,6 +7169,18 @@
+     private void openChat() {
+         if (userId != 0) {
+             if (finishFragmentIfPreviousIsChatActivity()) {
+                 return;
+             }
+ 
+             TLRPC.User user = getMessagesController().getUser(userId);
+             if (user == null || user instanceof TLRPC.TL_userEmpty) {
+                 return;
+             }
++            // E2EGram: in E2E-only mode open/create a secret chat instead of a cloud chat
++            if (getUserConfig().mg.e2eOnly) {
++                if (getParentActivity() == null) {
++                    return;
++                }
++                creatingChat = true;
++                getSecretChatHelper().startSecretChat(getParentActivity(), user);
++                return;
++            }
+             Bundle args = new Bundle();
+             args.putLong("user_id", userId);
+             if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+                 return;
+             }
+@@ -7201,6 +7213,14 @@
+     private void openGroup() {
+         if (finishFragmentIfPreviousIsChatActivity()) {
+             return;
+         }
+ 
++        if (getUserConfig().mg.e2eOnly) {
++            if (getParentActivity() != null) {
++                android.widget.Toast.makeText(getParentActivity(),
++                        "E2E only mode: groups are disabled", android.widget.Toast.LENGTH_SHORT).show();
++            }
++            return;
++        }
++
+         Bundle args = new Bundle();
+         args.putLong("chat_id", chatId);
+         if (!getMessagesController().checkCanOpenChat(args, ProfileActivity.this)) {
+             return;
+         }

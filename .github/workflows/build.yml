@@ -46,6 +46,7 @@ jobs:
           patch -p1 < ../patches/MgAccountConfig.java.patch
           patch -p1 < ../patches/MercurygramSettingsActivity.java.patch
           patch -p1 < ../patches/DialogsActivity.java.patch
+          patch -p1 --fuzz=3 < ../patches/ProfileActivity.java.patch || echo "WARN: ProfileActivity patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/MessagesController.java.patch || echo "WARN: MessagesController patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/GroupCreateActivity.java.patch || echo "WARN: GroupCreateActivity patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/ChannelCreateActivity.java.patch || echo "WARN: ChannelCreateActivity patch may need adjust"
@@ -141,7 +142,7 @@ jobs:
             Package id: **org.e2egram.app** (side-by-side with Telegram / Mercurygram).
 
             Settings → Mercurygram:
-            - Chat mode: E2E only / Normal Telegram
+            - Chat mode: E2E only / Normal Telegram (confirmation on enable)
             - Skin: Classic / Modern
             - BitChat / nearby mesh → Open BitChat companion
         env:

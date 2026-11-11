@@ -11,7 +11,7 @@
      private static final int ID_DISABLE_AUTO_UPDATE = 20;
      private static final int ID_ACCEPT_PRERELEASES = 21;
      private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
-@@ -224,6 +228,30 @@
+@@ -224,6 +228,30 @@@@
                  .setChecked(getUserConfig().mg.preferSecretChats));
          items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramPreferSecretChatsAbout)));
  
@@ -39,20 +39,38 @@
          items.add(UItem.asButton(ID_TRANSLATION,
                  LocaleController.getString(R.string.MercurygramTranslationSettings),
                  translationModeShortLabel()));
-@@ -419,6 +447,72 @@
+@@ -419,6 +447,99 @@
                  getUserConfig().saveConfig(false);
                  refreshList();
                  break;
 +            case ID_E2E_ONLY:
 +                boolean next = !getUserConfig().mg.e2eOnly;
 +                if (next) {
-+                    getUserConfig().mg.preferSecretChats = true;
++                    // Confirm before enabling hard E2E-only mode
++                    if (getParentActivity() == null) {
++                        break;
++                    }
++                    org.telegram.ui.ActionBar.AlertDialog.Builder b =
++                            new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity());
++                    b.setTitle("Enable E2E only mode?");
++                    b.setMessage("Only secret chats will be shown. Cloud chats stay on Telegram servers but are hidden in this app. Groups and channels cannot be created. Continue?");
++                    b.setPositiveButton("Enable", (d, w) -> {
++                        getUserConfig().mg.preferSecretChats = true;
++                        getUserConfig().mg.e2eOnly = true;
++                        getUserConfig().saveConfig(false);
++                        getMessagesController().sortDialogs(null);
++                        getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.dialogsNeedReload);
++                        refreshList();
++                    });
++                    b.setNegativeButton("Cancel", null);
++                    showDialog(b.create());
++                } else {
++                    getUserConfig().mg.e2eOnly = false;
++                    getUserConfig().saveConfig(false);
++                    getMessagesController().sortDialogs(null);
++                    getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.dialogsNeedReload);
++                    refreshList();
 +                }
-+                getUserConfig().mg.e2eOnly = next;
-+                getUserConfig().saveConfig(false);
-+                getMessagesController().sortDialogs(null);
-+                getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.dialogsNeedReload);
-+                refreshList();
 +                break;
 +            case ID_CLASSIC_SKIN:
 +                getUserConfig().mg.useClassicSkin = !getUserConfig().mg.useClassicSkin;

@@ -1,14 +1,14 @@
 --- a/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
 +++ b/TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java
-@@ -22536,6 +22536,11 @@
-             }
+@@ -22599,6 +22599,7 @@
          }
+ 
          MgPins.apply(currentAccount, allDialogs); // MG: pins past the server's limit live on this device only, put them back before sorting
 +        final boolean e2eOnlyMode = getUserConfig().mg.e2eOnly;
          try {
              Collections.sort(allDialogs, dialogComparator);
          } catch (Exception e) {}
-@@ -22539,6 +22544,10 @@
+@@ -22612,6 +22613,10 @@
          for (int a = 0, N = allDialogs.size(); a < N; a++) {
              TLRPC.Dialog d = allDialogs.get(a);
              if (d instanceof TLRPC.TL_dialog) {

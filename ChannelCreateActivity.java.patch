@@ -1,6 +1,7 @@
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
-@@ -160,6 +160,14 @@
+@@ -163,6 +163,14 @@
+ 
      public ChannelCreateActivity(Bundle args) {
          super(args);
 +        if (getUserConfig().mg.e2eOnly) {

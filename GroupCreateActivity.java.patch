@@ -1,6 +1,8 @@
 --- a/TMessagesProj/src/main/java/org/telegram/ui/GroupCreateActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/GroupCreateActivity.java
 @@ -259,6 +259,15 @@
+ 
+     @Override
      public boolean onFragmentCreate() {
 +        if (getUserConfig().mg.e2eOnly) {
 +            AndroidUtilities.runOnUIThread(() -> {
@@ -11,6 +13,6 @@
 +            });
 +            return false;
 +        }
-         getNotificationCenter().addObserver(this, NotificationCenter.contactsDidLoad);
-         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
-         getNotificationCenter().addObserver(this, NotificationCenter.chatDidCreated);
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.contactsDidLoad);
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.updateInterfaces);
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.chatDidCreated);

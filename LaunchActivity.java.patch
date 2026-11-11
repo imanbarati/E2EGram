@@ -1,0 +1,55 @@
+--- a/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/LaunchActivity.java
+@@ -3077,6 +3077,44 @@
+                         VoIPPendingCall.startOrSchedule(this, push_user_id, videoCallUser, AccountInstance.getInstance(intentAccount[0]));
+                     }
+                 } else {
++                    if (UserConfig.getInstance(intentAccount[0]).mg.e2eOnly) {
++                        MessagesController mc = MessagesController.getInstance(intentAccount[0]);
++                        int encId = 0;
++                        for (int i = 0; i < mc.encryptedChats.size(); i++) {
++                            TLRPC.EncryptedChat ec = mc.encryptedChats.valueAt(i);
++                            if (ec != null && ec.user_id == push_user_id && !(ec instanceof TLRPC.TL_encryptedChatDiscarded)) {
++                                encId = ec.id;
++                                break;
++                            }
++                        }
++                        if (encId != 0) {
++                            Bundle argsEnc = new Bundle();
++                            argsEnc.putInt("enc_id", encId);
++                            if (push_msg_id != 0) {
++                                argsEnc.putInt("message_id", push_msg_id);
++                            }
++                            if (mainFragmentsStack.isEmpty() || mc.checkCanOpenChat(argsEnc, mainFragmentsStack.get(mainFragmentsStack.size() - 1))) {
++                                ChatActivity fragment = new ChatActivity(argsEnc);
++                                if (getActionBarLayout().presentFragment(new INavigationLayout.NavigationParams(fragment).setNoAnimation(true))) {
++                                    pushOpened = true;
++                                    LaunchActivity.dismissAllWeb();
++                                }
++                            }
++                        } else {
++                            TLRPC.User u = mc.getUser(push_user_id);
++                            if (u != null) {
++                                org.telegram.messenger.SecretChatHelper.getInstance(intentAccount[0]).startSecretChat(this, u);
++                                pushOpened = true;
++                                LaunchActivity.dismissAllWeb();
++                            }
++                        }
++                    } else {
+                     Bundle args = new Bundle();
+                     args.putLong("user_id", push_user_id);
+                     if (push_msg_id != 0) {
+                         args.putInt("message_id", push_msg_id);
+                     }
+                     if (mainFragmentsStack.isEmpty() || MessagesController.getInstance(intentAccount[0]).checkCanOpenChat(args, mainFragmentsStack.get(mainFragmentsStack.size() - 1))) {
+                         ChatActivity fragment = new ChatActivity(args);
+                         if (getActionBarLayout().presentFragment(new INavigationLayout.NavigationParams(fragment).setNoAnimation(true))) {
+                             pushOpened = true;
+                             LaunchActivity.dismissAllWeb();
+                         }
+                     }
++                    }
+                 }
+             } else if (push_chat_id != 0) {
+                 Bundle args = new Bundle();
+                 args.putLong("chat_id", push_chat_id);

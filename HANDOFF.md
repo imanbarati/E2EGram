@@ -1,76 +1,41 @@
 # HANDOFF — E2EGram
 
-**For any AI agent (Gemini, Claude, Grok, Cursor, Google AI Studio, etc.):**  
-Read this file fully before changing code. Treat it as ground truth. Do not re-scaffold the project from scratch.
+**For any AI agent:** Read fully before changing code.
 
 | Field | Value |
 |-------|--------|
 | **Repo** | https://github.com/imanbarati/E2EGram |
-| **Owner** | imanbarati |
-| **Branch** | `main` |
-| **Base project** | [Mercurygram](https://github.com/Mercurygram/Mercurygram) (branch `Mercurygram`) — FOSS Telegram Android fork |
-| **Last handoff update** | 2026-11-11 |
+| **Base** | Mercurygram (`Mercurygram` branch) |
+| **Package** | `org.e2egram.app` (side-by-side) |
+| **Last update** | 2026-11-11 |
 
----
+## Done
 
-## Mission
+- [x] E2E-only mode: dialog filter, block group/channel create, force secret on new write
+- [x] Confirmation dialog when enabling E2E-only
+- [x] ProfileActivity: openChat → secret; openGroup blocked
+- [x] ContactsActivity: force `createSecretChat` when E2E-only
+- [x] LaunchActivity: user notification → existing secret chat or `startSecretChat`
+- [x] Classic skin flag + BitChat companion settings/intent
+- [x] CI builds arm64 debug APK + pre-release
 
-Privacy-first client that:
+## Not done
 
-1. Improves Telegram (Mercurygram) with **hard E2E-only mode** and **classic ↔ modern skin**
-2. Can install **side-by-side** with official Telegram (`org.e2egram.app`)
-3. Bridges to **BitChat** (offline mesh), and later Matrix / Fediverse / AI assistants
-4. Does **not** pretend multi-protocol is a few patches on MTProto
+- [ ] Deep links / global search remaining edges
+- [ ] Group notification ignore when E2E-only (user path done)
+- [ ] Classic Theme visual overlay
+- [ ] String resources
+- [ ] Smoke-test with real APP_ID/APP_HASH
+- [ ] P3–P4: location search, AI assistant, Matrix/Fediverse
 
-See [RESEARCH.md](RESEARCH.md) and [BITCHAT.md](BITCHAT.md).
+## Patches
 
----
+`MgAccountConfig`, `MercurygramSettingsActivity`, `DialogsActivity`, `ProfileActivity`, `ContactsActivity`, `LaunchActivity`, `MessagesController`, `GroupCreateActivity`, `ChannelCreateActivity`
 
-## Current state
+## Next
 
-### Done
+1. Classic Theme MVP or deep-link edges
+2. Verify CI APK + login
+3. Optional: ignore `push_chat_id` when E2E-only
 
-- [x] Repo + CI patches → arm64 debug APK + pre-release
-- [x] `e2eOnly`, `useClassicSkin`, `bitChatEnabled` in `MgAccountConfig`
-- [x] Settings: E2E / Classic / BitChat rows
-- [x] **Confirmation dialog when enabling E2E-only**
-- [x] Dialog filter + force secret on new write (DialogsActivity)
-- [x] Block group/channel create
-- [x] **ProfileActivity**: `openChat` → secret chat when E2E-only; `openGroup` blocked
-- [x] Package id `org.e2egram.app` (side-by-side)
-- [x] BitChat companion intent from settings
-
-### Not done
-
-- [ ] Harden remaining paths (notifications, deep links, global search results)
-- [ ] Classic **theme** visual overlay (flag only)
-- [ ] String resources (hard-coded English in patches)
-- [ ] Drawer/FAB BitChat entry
-- [ ] Smoke-test login with real APP_ID/APP_HASH
-- [ ] Independent location search / AI assistant / Matrix / Fediverse (P3–P4)
-
----
-
-## Key patches
-
-| Patch | Purpose |
-|-------|---------|
-| `MgAccountConfig.java.patch` | flags |
-| `MercurygramSettingsActivity.java.patch` | UI + E2E confirm + BitChat open |
-| `DialogsActivity.java.patch` | new write → secret |
-| `ProfileActivity.java.patch` | profile open → secret / block groups |
-| `MessagesController.java.patch` | hide non-secret dialogs |
-| `GroupCreateActivity` / `ChannelCreateActivity` | block create |
-
----
-
-## Suggested next work
-
-1. Notification / LaunchActivity deep-link hardening when e2eOnly
-2. Classic Theme overlay MVP
-3. Smoke-test APK with secrets
-4. Nominatim location search or AI assistant activity
-
----
-
-*Update this file when you finish a chunk of work.*
+See RESEARCH.md / BITCHAT.md for longer-term direction.

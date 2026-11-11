@@ -1,0 +1,13 @@
+--- a/TMessagesProj/src/main/java/org/telegram/ui/ContactsActivity.java
++++ b/TMessagesProj/src/main/java/org/telegram/ui/ContactsActivity.java
+@@ -193,6 +193,10 @@
+             destroyAfterSelect = arguments.getBoolean("destroyAfterSelect", false);
+             returnAsResult = arguments.getBoolean("returnAsResult", false);
+             createSecretChat = arguments.getBoolean("createSecretChat", false);
++            // E2EGram: always start secret chats from contact picker in E2E-only mode
++            if (UserConfig.getInstance(currentAccount).mg.e2eOnly) {
++                createSecretChat = true;
++            }
+             selectAlertString = arguments.getString("selectAlertString");
+             allowUsernameSearch = arguments.getBoolean("allowUsernameSearch", true);
+             needForwardCount = arguments.getBoolean("needForwardCount", true);

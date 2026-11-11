@@ -35,7 +35,6 @@ jobs:
         working-directory: src
         run: |
           set -euo pipefail
-          # Side-by-side package id (install next to official Telegram / Mercurygram)
           if grep -q '^APP_PACKAGE=' gradle.properties; then
             sed -i 's/^APP_PACKAGE=.*/APP_PACKAGE=org.e2egram.app/' gradle.properties
           else
@@ -47,6 +46,8 @@ jobs:
           patch -p1 < ../patches/MercurygramSettingsActivity.java.patch
           patch -p1 < ../patches/DialogsActivity.java.patch
           patch -p1 --fuzz=3 < ../patches/ProfileActivity.java.patch || echo "WARN: ProfileActivity patch may need adjust"
+          patch -p1 --fuzz=3 < ../patches/ContactsActivity.java.patch || echo "WARN: ContactsActivity patch may need adjust"
+          patch -p1 --fuzz=3 < ../patches/LaunchActivity.java.patch || echo "WARN: LaunchActivity patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/MessagesController.java.patch || echo "WARN: MessagesController patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/GroupCreateActivity.java.patch || echo "WARN: GroupCreateActivity patch may need adjust"
           patch -p1 --fuzz=3 < ../patches/ChannelCreateActivity.java.patch || echo "WARN: ChannelCreateActivity patch may need adjust"
@@ -138,12 +139,7 @@ jobs:
           prerelease: true
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
-            E2EGram = Mercurygram + E2E-only mode + classic skin flag + BitChat entry points.
-            Package id: **org.e2egram.app** (side-by-side with Telegram / Mercurygram).
-
-            Settings → Mercurygram:
-            - Chat mode: E2E only / Normal Telegram (confirmation on enable)
-            - Skin: Classic / Modern
-            - BitChat / nearby mesh → Open BitChat companion
+            E2EGram — package org.e2egram.app
+            E2E-only confirmation, profile/contacts/notification secret-chat paths, BitChat entry, classic skin flag.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

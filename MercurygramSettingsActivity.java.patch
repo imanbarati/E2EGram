@@ -20,19 +20,17 @@
          items.add(UItem.asButton(ID_TRANSLATION,
                  LocaleController.getString(R.string.MercurygramTranslationSettings),
                  translationModeShortLabel()));
-@@ -419,6 +425,19 @@
+@@ -419,6 +425,18 @@
                  getUserConfig().saveConfig(false);
                  refreshList();
                  break;
 +            case ID_E2E_ONLY:
 +                boolean next = !getUserConfig().mg.e2eOnly;
 +                if (next) {
-+                    // Force preferSecretChats as well when turning the hard mode on
 +                    getUserConfig().mg.preferSecretChats = true;
 +                }
 +                getUserConfig().mg.e2eOnly = next;
 +                getUserConfig().saveConfig(false);
-+                // Force a dialogs refresh so the list filters immediately
 +                getMessagesController().sortDialogs(null);
 +                getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.dialogsNeedReload);
 +                refreshList();

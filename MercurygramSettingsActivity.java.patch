@@ -11,7 +11,7 @@
      private static final int ID_DISABLE_AUTO_UPDATE = 20;
      private static final int ID_ACCEPT_PRERELEASES = 21;
      private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
-@@ -224,6 +228,30 @@@@
+@@ -224,6 +228,30 @@
                  .setChecked(getUserConfig().mg.preferSecretChats));
          items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramPreferSecretChatsAbout)));
  

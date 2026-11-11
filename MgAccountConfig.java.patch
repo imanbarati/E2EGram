@@ -1,6 +1,6 @@
 --- a/TMessagesProj/src/main/java/it/belloworld/mercurygram/MgAccountConfig.java
 +++ b/TMessagesProj/src/main/java/it/belloworld/mercurygram/MgAccountConfig.java
-@@ -33,6 +33,18 @@
+@@ -33,6 +33,26 @@
      public boolean disableInstantView = false;
      public boolean disableLinkPreviews = false;
      public boolean preferSecretChats = false;
@@ -14,35 +14,44 @@
 +    public boolean e2eOnly = false;
 +    /**
 +     * Classic (early Telegram) skin vs modern Mercurygram skin.
++     * Flag is persisted; full Theme overlay is applied when useClassicSkin is true
++     * (see Theme hooks — partial until classic resources land).
 +     */
 +    public boolean useClassicSkin = false;
++    /**
++     * Show BitChat / nearby mesh entry points (opens companion BitChat app).
++     */
++    public boolean bitChatEnabled = true;
      public boolean deleteForAllByDefault = false;
      public boolean stripTrackingParams = false;
      public boolean disableCloudDrafts = false;
-@@ -91,6 +103,8 @@
+@@ -91,6 +111,9 @@
          editor.putBoolean("disableInstantView", disableInstantView);
          editor.putBoolean("disableLinkPreviews", disableLinkPreviews);
          editor.putBoolean("preferSecretChats", preferSecretChats);
 +        editor.putBoolean("e2eOnly", e2eOnly);
 +        editor.putBoolean("useClassicSkin", useClassicSkin);
++        editor.putBoolean("bitChatEnabled", bitChatEnabled);
          editor.putBoolean("deleteForAllByDefault", deleteForAllByDefault);
          editor.putBoolean("stripTrackingParams", stripTrackingParams);
          editor.putBoolean("disableCloudDrafts", disableCloudDrafts);
-@@ -120,6 +134,8 @@
+@@ -120,6 +143,9 @@
          disableInstantView = preferences.getBoolean("disableInstantView", false);
          disableLinkPreviews = preferences.getBoolean("disableLinkPreviews", false);
          preferSecretChats = preferences.getBoolean("preferSecretChats", false);
 +        e2eOnly = preferences.getBoolean("e2eOnly", false);
 +        useClassicSkin = preferences.getBoolean("useClassicSkin", false);
++        bitChatEnabled = preferences.getBoolean("bitChatEnabled", true);
          deleteForAllByDefault = preferences.getBoolean("deleteForAllByDefault", false);
          stripTrackingParams = preferences.getBoolean("stripTrackingParams", false);
          disableCloudDrafts = preferences.getBoolean("disableCloudDrafts", false);
-@@ -155,6 +171,8 @@
+@@ -155,6 +181,9 @@
          disableInstantView = false;
          disableLinkPreviews = false;
          preferSecretChats = false;
 +        e2eOnly = false;
 +        useClassicSkin = false;
++        bitChatEnabled = true;
          deleteForAllByDefault = false;
          stripTrackingParams = false;
          disableCloudDrafts = false;

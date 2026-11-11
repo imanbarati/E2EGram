@@ -1,15 +1,17 @@
 --- a/TMessagesProj/src/main/java/it/belloworld/mercurygram/ui/MercurygramSettingsActivity.java
 +++ b/TMessagesProj/src/main/java/it/belloworld/mercurygram/ui/MercurygramSettingsActivity.java
-@@ -51,6 +51,8 @@
+@@ -51,6 +51,10 @@
      private static final int ID_DISABLE_LIVE_PHOTOS = 12;
      private static final int ID_DISABLE_LINK_PREVIEWS = 13;
      private static final int ID_PREFER_SECRET_CHATS = 14;
 +    private static final int ID_E2E_ONLY = 16;
 +    private static final int ID_CLASSIC_SKIN = 17;
++    private static final int ID_BITCHAT_ENABLED = 18;
++    private static final int ID_BITCHAT_OPEN = 19;
      private static final int ID_DISABLE_AUTO_UPDATE = 20;
      private static final int ID_ACCEPT_PRERELEASES = 21;
      private static final int ID_CHECK_FOR_UPDATES_NOW = 22;
-@@ -224,6 +226,18 @@
+@@ -224,6 +228,30 @@
                  .setChecked(getUserConfig().mg.preferSecretChats));
          items.add(UItem.asShadow(LocaleController.getString(R.string.MercurygramPreferSecretChatsAbout)));
  
@@ -19,16 +21,25 @@
 +                .setChecked(getUserConfig().mg.e2eOnly));
 +        items.add(UItem.asShadow("Off = full Telegram (cloud chats, groups, channels). On = secret chats only; groups/channels blocked; cloud chats hidden from the list."));
 +
-+        // Classic vs modern skin (flag only for now; theme work TBD)
++        // Classic vs modern skin
 +        items.add(UItem.asCheck(ID_CLASSIC_SKIN,
-+                        "Classic skin (experimental)")
++                        getUserConfig().mg.useClassicSkin ? "Skin: Classic (experimental)" : "Skin: Modern")
 +                .setChecked(getUserConfig().mg.useClassicSkin));
-+        items.add(UItem.asShadow("Use the early Telegram-style look (paper-plane era). Modern Mercurygram skin when off. Independent of chat mode."));
++        items.add(UItem.asShadow("Classic ≈ early Telegram look. Modern = current Mercurygram. Independent of chat mode. Restart the app if colours do not refresh."));
++
++        // BitChat companion (nearby BLE mesh)
++        items.add(UItem.asCheck(ID_BITCHAT_ENABLED,
++                        "Show BitChat / nearby mesh")
++                .setChecked(getUserConfig().mg.bitChatEnabled));
++        items.add(UItem.asShadow("BitChat is offline Bluetooth mesh (no Telegram servers). Nearby radios can see a device id. Opens the BitChat app if installed."));
++        if (getUserConfig().mg.bitChatEnabled) {
++            items.add(UItem.asButton(ID_BITCHAT_OPEN, "Open BitChat", "Companion app"));
++        }
 +
          items.add(UItem.asButton(ID_TRANSLATION,
                  LocaleController.getString(R.string.MercurygramTranslationSettings),
                  translationModeShortLabel()));
-@@ -419,6 +433,30 @@
+@@ -419,6 +447,72 @@
                  getUserConfig().saveConfig(false);
                  refreshList();
                  break;
@@ -49,12 +60,40 @@
 +                if (getParentActivity() != null) {
 +                    android.widget.Toast.makeText(getParentActivity(),
 +                            getUserConfig().mg.useClassicSkin
-+                                    ? "Classic skin flag on (theme not fully applied yet)"
++                                    ? "Classic skin on — restart if theme does not refresh"
 +                                    : "Modern skin",
 +                            android.widget.Toast.LENGTH_SHORT).show();
 +                }
 +                refreshList();
 +                break;
++            case ID_BITCHAT_ENABLED:
++                getUserConfig().mg.bitChatEnabled = !getUserConfig().mg.bitChatEnabled;
++                getUserConfig().saveConfig(false);
++                refreshList();
++                break;
++            case ID_BITCHAT_OPEN: {
++                android.app.Activity act = getParentActivity();
++                if (act == null) break;
++                try {
++                    android.content.Intent launch = act.getPackageManager().getLaunchIntentForPackage("com.bitchat.droid");
++                    if (launch != null) {
++                        act.startActivity(launch);
++                    } else {
++                        android.content.Intent web = new android.content.Intent(android.content.Intent.ACTION_VIEW,
++                                android.net.Uri.parse("https://github.com/permissionlesstech/bitchat-android/releases"));
++                        act.startActivity(web);
++                    }
++                } catch (Exception e) {
++                    try {
++                        android.content.Intent web = new android.content.Intent(android.content.Intent.ACTION_VIEW,
++                                android.net.Uri.parse("https://github.com/permissionlesstech/bitchat-android/releases"));
++                        act.startActivity(web);
++                    } catch (Exception ignored) {
++                        android.widget.Toast.makeText(act, "Install BitChat from GitHub releases", android.widget.Toast.LENGTH_LONG).show();
++                    }
++                }
++                break;
++            }
              case ID_TRANSCRIPTION:
                  presentFragment(new MercurygramTranscriptionSettingsActivity());
                  break;

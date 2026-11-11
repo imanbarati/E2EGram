@@ -43,7 +43,9 @@ Independent: any combination of mode × skin is valid.
 - [x] `e2eOnly` in `MgAccountConfig` (save/load/reset)
 - [x] Settings labels: “Chat mode: E2E only” / “Chat mode: Normal Telegram”
 - [x] When E2E-only: filter dialogs, force secret on new write, block group/channel create
-- [x] `useClassicSkin` flag in `MgAccountConfig` + settings row (theme application **not** done)
+- [x] `useClassicSkin` flag in `MgAccountConfig` + settings row (full Theme overlay still experimental)
+- [x] Distinct package id **`org.e2egram.app`** (CI sed on `APP_PACKAGE`) — side-by-side with Telegram/Mercurygram
+- [x] BitChat MVP companion: `bitChatEnabled` + Settings toggle + **Open BitChat** intent (`com.bitchat.droid` / GitHub releases fallback)
 - [x] RESEARCH.md, BITCHAT.md, this HANDOFF
 - [x] APP_ID / APP_HASH documented as GitHub Actions secrets
 
@@ -51,10 +53,9 @@ Independent: any combination of mode × skin is valid.
 
 - [ ] Confirmation dialog on first enable of E2E-only
 - [ ] Harden open paths (search/profile/notifications) to force secret chat when E2E-only
-- [ ] Classic **theme** application (Theme / DialogCell / intro) — flag only today
-- [ ] Distinct `applicationId` for side-by-side install
+- [ ] Classic **theme** application (Theme / DialogCell / intro) — flag + settings done; visual overlay TBD
 - [ ] String resources instead of hard-coded English
-- [ ] BitChat MVP: settings section + drawer/intent to open BitChat app ([BITCHAT.md](BITCHAT.md))
+- [ ] Drawer/FAB BitChat entry (settings button exists)
 - [ ] Smoke-test login with real APP_ID/APP_HASH
 
 ### Explicitly later (P3–P4 — architecture change)
@@ -73,7 +74,8 @@ Independent: any combination of mode × skin is valid.
 
 1. CI checks out `Mercurygram/Mercurygram` @ `Mercurygram`
 2. Applies root `*.java.patch` with `patch -p1`
-3. Builds `assembleAfatFdArm64Debug`
+3. Sets `APP_PACKAGE=org.e2egram.app` via sed
+4. Builds `assembleAfatFdArm64Debug`
 
 **Rule:** Prefer small reversible patches. Do not vendor the full Telegram tree unless the user explicitly decides to leave the patch model.
 
@@ -81,8 +83,8 @@ Independent: any combination of mode × skin is valid.
 
 | Patch | Purpose |
 |-------|---------|
-| `MgAccountConfig.java.patch` | `e2eOnly`, `useClassicSkin` |
-| `MercurygramSettingsActivity.java.patch` | Settings rows + handlers |
+| `MgAccountConfig.java.patch` | `e2eOnly`, `useClassicSkin`, `bitChatEnabled` |
+| `MercurygramSettingsActivity.java.patch` | Settings rows + handlers + BitChat open intent |
 | `DialogsActivity.java.patch` | Force secret on new write |
 | `MessagesController.java.patch` | Hide non-encrypted dialogs when E2E-only |
 | `GroupCreateActivity.java.patch` | Block groups |
@@ -92,6 +94,7 @@ Independent: any combination of mode × skin is valid.
 
 - `UserConfig.getInstance(account).mg.e2eOnly`
 - `UserConfig.getInstance(account).mg.useClassicSkin`
+- `UserConfig.getInstance(account).mg.bitChatEnabled`
 - Enabling E2E-only forces `preferSecretChats = true`
 
 ---
@@ -100,9 +103,9 @@ Independent: any combination of mode × skin is valid.
 
 ### 1. E2E ↔ Normal mode
 
-- Boolean (or enum) already exists.
+- Boolean already exists.
 - On → Normal: `sortDialogs` + `dialogsNeedReload`; allow groups/channels.
-- On → E2E: hide non-secret; block create; confirmation once.
+- On → E2E: hide non-secret; block create; confirmation once (still TODO).
 - Harden: search, contacts, profile, notification taps, deep links.
 
 ### 2. Classic skin
@@ -110,32 +113,18 @@ Independent: any combination of mode × skin is valid.
 - Flag: `useClassicSkin` (done).
 - Implement via Theme / resource overlay; keep modern fully working.
 - MVP classic: action bar + list density + optional classic empty/welcome.
-- Not required: pixel-perfect 2013 clone on day one.
 
-### 3. BitChat (implement next among big items)
+### 3. BitChat
 
-See [BITCHAT.md](BITCHAT.md).
-
-**MVP only:**
-
-1. Settings → “Nearby mesh / BitChat”
-2. Toggle “Show BitChat entry points”
-3. Drawer or FAB: “Open BitChat” → `Intent` to `com.bitchat.droid` or market/GitHub URI
-4. Short privacy note (persistent mesh ID observable nearby)
-
-Do not embed BLE stack until companion bridge ships.
+See [BITCHAT.md](BITCHAT.md). **MVP shipped:** settings toggle + Open BitChat intent.
 
 ### 4. Multi-protocol (Matrix, Fediverse, AI, location)
 
-Documented in RESEARCH.md. **Do not start Matrix/Fediverse SDK work** until P0–P2 are solid and the user confirms they want to leave pure-patch architecture.
-
-**AI assistant MVP (when scheduled):** separate activity, OpenAI-compatible base URL + key, no automatic Telegram content upload.
-
-**Location search MVP:** Nominatim (or configurable) query UI → geo/share into chat; independent of Telegram places API.
+Documented in RESEARCH.md. Do not start SDK work until P0–P2 are solid.
 
 ### 5. Side-by-side with Telegram
 
-Change package/`applicationId` in the build (Mercurygram Gradle) so E2EGram and official Telegram can both be installed. Document in README.
+**Done:** `APP_PACKAGE=org.e2egram.app` in CI.
 
 ---
 
@@ -156,8 +145,8 @@ Trigger: push to `main` or Actions → Build E2EGram APK → Run workflow.
 1. Read HANDOFF.md, RESEARCH.md, BITCHAT.md, README.md first.
 2. Small patches only; verify `patch -p1` against current Mercurygram.
 3. Never commit API credentials or AI keys.
-4. Update Done / Not done and “Last handoff update” after meaningful work.
-5. Multi-protocol work needs an explicit architecture decision — do not force Matrix into MTProto patches.
+4. Update Done / Not done after meaningful work.
+5. Multi-protocol work needs an explicit architecture decision.
 6. Classic skin = overlay; modern must keep working.
 
 ---
@@ -166,34 +155,11 @@ Trigger: push to `main` or Actions → Build E2EGram APK → Run workflow.
 
 1. Confirm secrets + successful APK login smoke test  
 2. E2E mode: confirmation + open-path hardening  
-3. Distinct applicationId (side-by-side)  
-4. BitChat companion MVP (settings + intent)  
-5. Classic theme MVP (Theme/DialogCell)  
-6. Independent location search (Nominatim)  
-7. AI assistant activity (OpenAI-compatible)  
-8. Only then: Matrix/Fediverse design doc + first bridge  
+3. Classic theme MVP (Theme/DialogCell)  
+4. Independent location search (Nominatim)  
+5. AI assistant activity (OpenAI-compatible)  
+6. Only then: Matrix/Fediverse design doc + first bridge  
 
 ---
 
-## Quick continue prompt
-
-```
-Continue E2EGram from HANDOFF.md and RESEARCH.md.
-
-Repo: https://github.com/imanbarati/E2EGram
-Base: Mercurygram (branch Mercurygram)
-
-Priority order:
-1) E2E mode hardening + confirmation
-2) BitChat companion intent (BITCHAT.md)
-3) Classic skin theme (flag already exists)
-4) Side-by-side applicationId
-
-Do not start Matrix/Fediverse SDKs until P0–P2 are done.
-Keep changes as minimal CI patches. Never commit APP_ID/APP_HASH.
-Update HANDOFF Done/Not done when finished.
-```
-
----
-
-*End of handoff. Update when you finish a chunk of work.*
+*End of handoff.*

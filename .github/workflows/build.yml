@@ -31,10 +31,18 @@ jobs:
           submodules: recursive
           fetch-depth: 1
 
-      - name: Apply E2E-only patches
+      - name: Apply E2EGram patches
         working-directory: src
         run: |
           set -euo pipefail
+          # Side-by-side package id (install next to official Telegram / Mercurygram)
+          if grep -q '^APP_PACKAGE=' gradle.properties; then
+            sed -i 's/^APP_PACKAGE=.*/APP_PACKAGE=org.e2egram.app/' gradle.properties
+          else
+            echo 'APP_PACKAGE=org.e2egram.app' >> gradle.properties
+          fi
+          echo "Package set to:"
+          grep APP_PACKAGE gradle.properties
           patch -p1 < ../patches/MgAccountConfig.java.patch
           patch -p1 < ../patches/MercurygramSettingsActivity.java.patch
           patch -p1 < ../patches/DialogsActivity.java.patch
@@ -129,7 +137,12 @@ jobs:
           prerelease: true
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
-            Automatic unreleased APK of Mercurygram + E2E-only mode.
-            Toggle: Settings → Mercurygram → **E2E only mode (experimental)**
+            E2EGram = Mercurygram + E2E-only mode + classic skin flag + BitChat entry points.
+            Package id: **org.e2egram.app** (side-by-side with Telegram / Mercurygram).
+
+            Settings → Mercurygram:
+            - Chat mode: E2E only / Normal Telegram
+            - Skin: Classic / Modern
+            - BitChat / nearby mesh → Open BitChat companion
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

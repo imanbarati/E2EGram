@@ -1,4 +1,18 @@
 --- a/TMessagesProj/src/main/java/org/telegram/ui/GroupCreateActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/GroupCreateActivity.java
-@@ -1,5 +1,6 @@
- // placeholder - will be replaced by real content from disk
+@@ -259,6 +259,15 @@ public class GroupCreateActivity extends BaseFragment implements NotificationCen
+ 
+     @Override
+     public boolean onFragmentCreate() {
++        if (getUserConfig().mg.e2eOnly) {
++            AndroidUtilities.runOnUIThread(() -> {
++                if (getParentActivity() != null) {
++                    org.telegram.ui.Components.AlertsCreator.showSimpleAlert(this, "E2E only mode", "Creating groups is disabled while E2E only mode is enabled. Only secret chats are allowed.");
++                }
++                finishFragment();
++            });
++            return false;
++        }
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.contactsDidLoad);
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.updateInterfaces);
+         getNotificationCenter().addWeakObserver(this, NotificationCenter.chatDidCreated);

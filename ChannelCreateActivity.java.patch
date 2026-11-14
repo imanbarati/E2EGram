@@ -1,6 +1,6 @@
 --- a/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
 +++ b/TMessagesProj/src/main/java/org/telegram/ui/ChannelCreateActivity.java
-@@ -163,6 +163,14 @@
+@@ -163,6 +163,14 @@ public class ChannelCreateActivity extends BaseFragment implements NotificationC
  
      public ChannelCreateActivity(Bundle args) {
          super(args);

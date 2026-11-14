@@ -40,18 +40,16 @@ jobs:
           else
             echo 'APP_PACKAGE=org.e2egram.app' >> gradle.properties
           fi
-          echo "Package set to:"
           grep APP_PACKAGE gradle.properties
-          patch -p1 < ../patches/MgAccountConfig.java.patch
-          patch -p1 < ../patches/MercurygramSettingsActivity.java.patch
-          patch -p1 < ../patches/DialogsActivity.java.patch
-          patch -p1 --fuzz=3 < ../patches/ProfileActivity.java.patch || echo "WARN: ProfileActivity patch may need adjust"
-          patch -p1 --fuzz=3 < ../patches/ContactsActivity.java.patch || echo "WARN: ContactsActivity patch may need adjust"
-          patch -p1 --fuzz=3 < ../patches/LaunchActivity.java.patch || echo "WARN: LaunchActivity patch may need adjust"
-          patch -p1 --fuzz=3 < ../patches/MessagesController.java.patch || echo "WARN: MessagesController patch may need adjust"
-          patch -p1 --fuzz=3 < ../patches/GroupCreateActivity.java.patch || echo "WARN: GroupCreateActivity patch may need adjust"
-          patch -p1 --fuzz=3 < ../patches/ChannelCreateActivity.java.patch || echo "WARN: ChannelCreateActivity patch may need adjust"
-          echo "Patches applied"
+          for f in MgAccountConfig.java.patch MercurygramSettingsActivity.java.patch \
+                   DialogsActivity.java.patch ProfileActivity.java.patch \
+                   ContactsActivity.java.patch LaunchActivity.java.patch \
+                   MessagesController.java.patch GroupCreateActivity.java.patch \
+                   ChannelCreateActivity.java.patch; do
+            echo "Applying $f"
+            patch -p1 < "../patches/$f"
+          done
+          echo "All patches applied"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -69,9 +67,8 @@ jobs:
       - name: Parse NDK version
         working-directory: src
         run: |
-          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[0-9.]+"' TMessagesProj/build.gradle | grep -oE '[0-9.]+' | head -1)
+          ndk=$(grep -oE 'ndkVersion[[:space:]]+"[<fim-prefix]0-9.]+"' TMessagesProj/build.gradle | grep -oE '[0-9.]+' | head -1)
           echo "NDK_VERSION=$ndk" >> "$GITHUB_ENV"
-          echo "Using NDK $ndk"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -92,16 +89,13 @@ jobs:
           ID="${APP_ID:-1}"
           HASH="${APP_HASH:-0123456789abcdef0123456789abcdef}"
           printf 'APP_ID = %s\nAPP_HASH = %s\n' "$ID" "$HASH" > API_KEYS
-          echo "API_KEYS written (APP_ID=${ID})"
 
       - name: Build arm64 debug APK
         working-directory: src
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew assembleAfatFdArm64Debug \
-            --no-daemon \
-            --stacktrace \
+          ./gradlew assembleAfatFdArm64Debug --no-daemon --stacktrace \
             -PMG_BUILD_TAG="e2e.$(date +%Y%m%d).${{ github.run_number }}" \
             || ./gradlew assembleAfatDebug --no-daemon --stacktrace
 
@@ -111,16 +105,11 @@ jobs:
         run: |
           set -euo pipefail
           APK=$(find . -name "*.apk" -path "*/outputs/apk/*" | head -1)
-          if [ -z "$APK" ]; then
-            echo "No APK found"
-            find . -name "*.apk" || true
-            exit 1
-          fi
+          test -n "$APK"
           mkdir -p "$GITHUB_WORKSPACE/out"
           NAME="E2EGram-${{ github.run_number }}-arm64-debug.apk"
           cp "$APK" "$GITHUB_WORKSPACE/out/$NAME"
           echo "apk_path=out/$NAME" >> "$GITHUB_OUTPUT"
-          ls -lh "$GITHUB_WORKSPACE/out/"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -135,11 +124,9 @@ jobs:
         with:
           tag_name: build-${{ github.run_number }}
           name: E2EGram build ${{ github.run_number }}
-          draft: false
           prerelease: true
           files: ${{ steps.apk.outputs.apk_path }}
           body: |
-            E2EGram — package org.e2egram.app
-            E2E-only confirmation, profile/contacts/notification secret-chat paths, BitChat entry, classic skin flag.
+            Package: org.e2egram.app — E2E-only, BitChat, Grokipedia/blog entry points.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
